@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
-import { getSocket } from "../socket/socket.client";
+import { getSocket, initializeSocket } from "../socket/socket.client";
+import { useAuthStore } from "./useAuthStore";
 
 export const useMatchStore = create((set) => ({
     isloadingMatches: false,
@@ -57,13 +58,27 @@ export const useMatchStore = create((set) => ({
     },
     subscribeToNewMatches: async () => {
         try {
+            const userId = useAuthStore.getState().authUser?._id;
+            if (!userId) throw new Error("User not authenticated");
+
+            await initializeSocket(userId);
             const socket = getSocket();
-            socket.on("newMatch", (newMatch) => {
-                set((state) => ({ matches: [newMatch, ...state.matches] }));
-                toast.success("You got a new match! Let's chat!"); 
+
+            if (!socket) throw new Error("Failed to initialize socket");
+
+            socket.on("newMatch", (match) => {
+                set((state) => {
+                    if (state.matches.some(m => m._id === match._id)) {
+                        return state;
+                    }
+
+                    toast.success("You got a new match!");
+                    return { matches: [...state.matches, match] };
+                });
             });
         } catch (error) {
-            console.log(error);
+            console.error("Socket subscription error:", error);
+            toast.error("Failed to connect to match service");
         }
     },
     unsubscribeFromNewMatches: async () => {

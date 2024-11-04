@@ -9,7 +9,7 @@ import avatar from "../components/avatar.png";
 import MessageInput from "../components/MessageInput";
 
 const ChatPage = () => {
-  const { getMatches, matches, isloadingMatches } = useMatchStore();
+  const { getMatches, matches, isloadingMatches, subscribeToNewMatches, unsubscribeFromNewMatches } = useMatchStore();
   const {
     messages,
     getMessages,
@@ -33,6 +33,7 @@ const ChatPage = () => {
         await Promise.all([
           getMatches(),
           getMessages(id),
+          subscribeToNewMatches(),
           subscribeToMessages(),
         ]);
       } catch (error) {
@@ -53,13 +54,16 @@ const ChatPage = () => {
     return () => {
       mounted = false;
       unsubscribeFromMessages();
+      unsubscribeFromNewMatches();
     };
   }, [
     getMatches,
     authUser,
     getMessages,
+    subscribeToNewMatches,
     subscribeToMessages,
     unsubscribeFromMessages,
+    unsubscribeFromNewMatches,
     id,
   ]);
 
