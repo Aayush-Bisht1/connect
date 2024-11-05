@@ -5,12 +5,14 @@ const LogInForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const {login, loading} = useAuthStore();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log({ email, password });
+    login({ email, password });
+  }
   return (
     <form className="space-y-6"
-      onSubmit={(e) => {
-        e.preventDefault();
-        login({email, password});
-      }}
+      onSubmit={handleSubmit}
     >
       <div>
         <label
